@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FarmX • Zambia CPP Registry Prototype (v0.1)</title>
+  <meta name="description" content="Prototype: Supplier portal + national crop protection product registry for Zambia (FarmX technology partner).">
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --panel:#ffffff;
+      --panel2:#f7f9fc;
+      --text:#0d1e24;
+      --muted:#5f6f7a;
+      --line:rgba(0,0,0,.08);
+
+      --accent:#1672dd;
+      --accent2:#2fbfa5;
+      --warn:#e6b65c;
+      --bad:#e05a5a;
+      --good:#2fbfa5;
+
+      --shadow: 0 10px 40px rgba(0,0,0,.08);
+      --radius:18px;
+      --radius2:26px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 800px at 10% 10%, rgba(22,114,221,.10), transparent 55%),
+        radial-gradient(900px 600px at 90% 30%, rgba(47,191,165,.10), transparent 55%),
+        linear-gradient(180deg, #eef3f8 0%, var(--bg) 100%);
+      color:var(--text);
+      min-height:100vh;
+    }
+    a{color:inherit; text-decoration:none}
+    .container{max-width:1200px; margin:0 auto; padding:24px}
+    .topbar{
+      position:sticky; top:0; z-index:20;
+      background: rgba(7,10,20,.65);
+      backdrop-filter: blur(14px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar-inner{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 24px; max-width:1200px; margin:0 auto}
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background: linear-gradient(135deg, rgba(77,163,255,.90), rgba(87,240,198,.85));
+      box-shadow: 0 10px 30px rgba(77,163,255,.20);
+      display:grid; place-items:center;
+      border: 1px solid rgba(255,255,255,.20);
+    }
+    .logo svg{filter: drop-shadow(0 6px 14px rgba(0,0,0,.25));}
+    .brand h1{font-size:15px; margin:0; line-height:1.2}
+    .brand .sub{font-size:12px; color:var(--muted)}
+    .nav{display:flex; gap:10px; flex-wrap:wrap}
+    .chip{
+      padding:9px 12px; border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      font-size:13px; color:var(--text);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:hover{transform: translateY(-1px); background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.18);}
+    .chip.active{background: rgba(77,163,255,.18); border-color: rgba(77,163,255,.55);}
+
+    .hero{display:grid; grid-template-columns: 1.35fr .65fr; gap:18px; margin-top:20px}
+    .card{
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, var(--panel2));
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .pad{padding:18px}
+    .kicker{
+      display:inline-flex; gap:8px; align-items:center;
+      color:var(--muted); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    }
+    .kicker .dot{width:8px; height:8px; border-radius:999px; background: var(--accent2); box-shadow:0 0 0 5px rgba(87,240,198,.10)}
+    .title{margin:10px 0 8px; font-size:26px; line-height:1.12}
+    .lead{margin:0; color:var(--muted); font-size:14.5px; line-height:1.5}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin-top:18px}
+    .section-title{margin:0 0 10px; font-size:14px; letter-spacing:.02em; color:#d7e1ff}
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      background: rgba(47,191,165,.18);
+      border:1px solid rgba(47,191,165,.45);
+      font-size:12.5px;
+      color: var(--text);
+    }
+    .pill.warn{
+      background: rgba(230,182,92,.22);
+      border-color: rgba(230,182,92,.55);
+      color: var(--text);
+    }
+    .pill.bad{
+      background: rgba(224,90,90,.20);
+      border-color: rgba(224,90,90,.55);
+      color: var(--text);
+    }
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .btn{
+      padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(0,0,0,.12);
+      background: #ffffff;
+      color:var(--text);
+      cursor:pointer;
+      font-size:13px;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background: #f7f9fc; border-color: rgba(0,0,0,.16);}
+    .btn.primary{
+      background: rgba(22,114,221,.14);
+      border-color: rgba(22,114,221,.45);
+    }
+    .btn.primary:hover{
+      background: rgba(22,114,221,.18);
+      border-color: rgba(22,114,221,.55);
+    }
+    .btn.ghost{
+      background: transparent;
+      border-color: rgba(0,0,0,.10);
+    }
+    .btn.ghost:hover{
+      background: #f7f9fc;
+      border-color: rgba(0,0,0,.16);
+    }
+    .btn.small{padding:8px 10px; border-radius:10px; font-size:12.5px}
+
+    .split{display:grid; grid-template-columns: .9fr 1.1fr; gap:18px; margin-top:18px}
+    .panel{
+      border:1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      overflow:hidden;
+    }
+    .panel .hdr{padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:10px}
+    .panel .hdr .h{font-size:13.5px; font-weight:650}
+    .panel .body{padding:14px 16px}
+    .field{display:flex; flex-direction:column; gap:6px; margin-bottom:12px}
+    .field label{font-size:12px; color:var(--muted)}
+    .input, select, textarea{
+      background: #ffffff;
+      border:1px solid rgba(0,0,0,.14);
+      color:var(--text);
+      padding:10px 11px;
+      border-radius:12px;
+      outline:none;
+      font-size:13.5px;
+      transition: border-color .12s ease, background .12s ease, box-shadow .12s ease;
+    }
+    textarea{min-height:92px; resize:vertical}
+    .input:focus, select:focus, textarea:focus{
+      border-color: rgba(22,114,221,.55);
+      background: #ffffff;
+      box-shadow: 0 0 0 4px rgba(22,114,221,.10);
+    }
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    .row3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px}
+    .note{
+      font-size:12.5px; color:var(--muted);
+      padding:10px 12px; border-radius:12px;
+      background:#f7f9fc;
+      border:1px dashed var(--line);
+      line-height:1.45;
+    }
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#ffffff;
+    }
+    .table th, .table td{
+      font-size:12.5px;
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      vertical-align:top;
+    }
+    .table th{
+      color: var(--text);
+      font-weight:650;
+      background: #f2f5f9;
+    }
+    .table tr:last-child td{border-bottom:none}
+    .tag{
+      display:inline-flex; align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(0,0,0,.03);
+      font-size:12px;
+      color: var(--text);
+      margin-right:6px; margin-bottom:6px;
+      white-space:nowrap;
+    }
+    .tag.good{
+      border-color: rgba(47,191,165,.55);
+      background: rgba(47,191,165,.18);
+      color: var(--text);
+    }
+    .tag.warn{
+      border-color: rgba(230,182,92,.60);
+      background: rgba(230,182,92,.22);
+      color: var(--text);
+    }
+    .tag.bad{
+      border-color: rgba(224,90,90,.60);
+      background: rgba(224,90,90,.20);
+      color: var(--text);
+    }
+    .footer{
+      margin-top:22px;
+      padding:16px 0 10px;
+      color:var(--muted);
+      font-size:12px;
+      border-top:1px solid var(--line);
+    }
+    .mono{font-family:var(--mono)}
+    .hidden{display:none !important;}
+    .divider{height:1px; background: var(--line); margin:14px 0}
+    .toast{
+      position:fixed;
+      right:16px; bottom:16px;
+      max-width:420px;
+      border:1px solid var(--line);
+      background: rgba(10,14,30,.85);
+      backdrop-filter: blur(16px);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      padding:12px 12px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      opacity:0; transform: translateY(8px);
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index:50;
+    }
+    .toast.show{opacity:1; transform: translateY(0); pointer-events:auto;}
+    .toast .icon{width:22px; height:22px; border-radius:7px; display:grid; place-items:center; flex:0 0 auto; margin-top:1px; border:1px solid rgba(255,255,255,.18);}
+    .toast.good .icon{background: rgba(87,240,198,.14); border-color: rgba(87,240,198,.35)}
+    .toast.warn .icon{background: rgba(255,204,102,.14); border-color: rgba(255,204,102,.35)}
+    .toast.bad .icon{background: rgba(255,107,107,.14); border-color: rgba(255,107,107,.35)}
+    .toast .t{font-weight:650; font-size:13px; margin:0}
+    .toast .m{margin:2px 0 0; font-size:12.5px; color:var(--muted); line-height:1.35}
+    .kbd{
+      font-family:var(--mono);
+      font-size:11.5px;
+      padding:2px 7px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,.12);
+      background: #ffffff;
+      color: var(--text);
+    }
+    @media (max-width: 980px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .split{grid-template-columns:1fr}
+      .row, .row3{grid-template-columns:1fr}
+    }
+  </style>
+  <!-- FarmX Branding Styles -->
+  <style>
+    :root{
+      --fx-primary:#114951;
+      --fx-primary-soft:#2E6F72;
+      --fx-accent:#1672dd;
+      --fx-bg:#f4f7f8;
+      --fx-panel:#ffffff;
+      --fx-border:#dfe7ec;
+      --fx-ink:#0d1e24;
+      --fx-muted:#62727c;
+      --fx-radius:12px;
+      --fx-shadow:0 10px 40px rgba(0,0,0,0.08);
+    }
+    .fx-shell{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .fx-header{
+      background:linear-gradient(120deg,var(--fx-primary),var(--fx-primary-soft));
+      color:#ffffff;
+      box-shadow:0 4px 18px rgba(0,0,0,0.18);
+      position:sticky;
+      top:0;
+      z-index:20;
+    }
+    .fx-header-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      max-width:1200px;
+      margin:0 auto;
+      padding:14px 18px;
+    }
+    .fx-brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .fx-logo-wrap{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.14);
+      border:1px solid rgba(255,255,255,0.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .fx-logo-img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .fx-brand-text{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+    .fx-brand-title{
+      font-weight:800;
+      letter-spacing:0.08em;
+      font-size:18px;
+      text-transform:uppercase;
+    }
+    .fx-brand-sub{
+      font-size:12px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:#d6ebee;
+    }
+    .fx-header-meta{
+      text-align:right;
+      font-size:13px;
+      line-height:1.4;
+      color:#e1f3f5;
+    }
+    .fx-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.18);
+      font-size:12px;
+      color:#e9f6f8;
+      cursor:pointer;
+      transition:background .12s ease, border-color .12s ease;
+    }
+    .fx-chip:hover{
+      background:rgba(255,255,255,0.18);
+      border-color:rgba(255,255,255,0.25);
+    }
+    .fx-chip.active{
+      background:rgba(255,255,255,0.22);
+      border-color:rgba(255,255,255,0.35);
+    }
+    .fx-page{
+      flex:1;
+    }
+    .fx-nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    @media (max-width:1080px){
+      .fx-header-inner{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .fx-header-meta{
+        text-align:left;
+        width:100%;
+      }
+      .fx-nav{
+        width:100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="fx-shell">
+    <header class="fx-header">
+      <div class="fx-header-inner">
+        <div class="fx-brand">
+          <div class="fx-logo-wrap">
+            <img id="fxLogo" class="fx-logo-img" alt="FarmX logo"/>
+          </div>
+          <div class="fx-brand-text">
+            <div class="fx-brand-title">FarmX</div>
+            <div class="fx-brand-sub">Zambia CPP Registry</div>
+          </div>
+        </div>
+        <div class="fx-header-meta">
+          <div class="fx-chip">Prototype v0.1</div>
+          <div>Technology partner for CropLife Zambia's national crop protection product registry</div>
+          <div class="fx-nav" role="navigation" aria-label="Primary">
+            <div class="fx-chip" data-route="#/home">Overview</div>
+            <div class="fx-chip" data-route="#/login">Member Login</div>
+            <div class="fx-chip" data-route="#/supplier">Supplier Portal</div>
+            <div class="fx-chip" data-route="#/registry">Registry Browse</div>
+            <div class="fx-chip" data-route="#/admin">Steward Console</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="fx-page">
+      <div class="container">
+    <!-- HOME -->
+    <section id="view-home">
+      <div class="hero">
+        <div class="card">
+          <div class="pad">
+            <div class="kicker"><span class="dot"></span> National digital infrastructure</div>
+            <h2 class="title">A single, auditable registry of crop protection products for Zambia — built by FarmX.</h2>
+            <p class="lead">
+              This prototype demonstrates how suppliers (manufacturers, importers, distributors) can submit standardized product registrations
+              and how CropLife (as steward) can validate and publish a trusted registry for farmers, buyers, and investors.
+            </p>
+
+            <div class="btnrow">
+              <button class="btn primary" onclick="go('#/login')">Enter member-only prototype</button>
+              <button class="btn" onclick="downloadTemplate()">Download upload template</button>
+              <button class="btn ghost" onclick="go('#/registry')">Try registry browse (requires login)</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid">
+              <div>
+                <h3 class="section-title">What this prototype proves</h3>
+                <div class="note">
+                  <div><span class="pill">Supplier onboarding</span> organization registration, contacts, roles.</div>
+                  <div style="margin-top:8px"><span class="pill">Structured uploads</span> spreadsheet upload, validation, preview, submit.</div>
+                  <div style="margin-top:8px"><span class="pill">Versioned records</span> “effective-from” updates, audit trail, status changes.</div>
+                  <div style="margin-top:8px"><span class="pill">Compliance overlays</span> crop legality, PHI/REI, market restrictions (e.g. tobacco).</div>
+                </div>
+              </div>
+              <div>
+                <h3 class="section-title">Guardrails to reduce liability</h3>
+                <div class="note">
+                  <div><span class="pill warn">Decision support</span> registry shows facts + warnings; it does not prescribe.</div>
+                  <div style="margin-top:8px"><span class="pill warn">Evidence links</span> labels & SDS attach to each product record.</div>
+                  <div style="margin-top:8px"><span class="pill warn">Supplier responsibility</span> each supplier owns accuracy of their submissions.</div>
+                  <div style="margin-top:8px"><span class="pill warn">Auditability</span> every change is time-stamped and reviewable.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="note">
+              <strong>Demo access:</strong> Use <span class="kbd">demo@farmx.local</span> / <span class="kbd">farmx</span> for member login.
+              Supplier demo uses <span class="kbd">supplier@farmx.local</span> / <span class="kbd">farmx</span>.
+              (This is a static prototype — no real authentication.)
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="pad">
+            <h3 class="section-title">Prototype scope</h3>
+            <div class="note">
+              <div><span class="tag good">Member-only access</span> enforced by local session flag.</div>
+              <div><span class="tag">Supplier upload</span> CSV/XLSX (validated).</div>
+              <div><span class="tag">Registry browse</span> filters + product detail.</div>
+              <div><span class="tag">Steward console</span> review queue + publish.</div>
+              <div style="margin-top:10px" class="muted">
+                Next phases (not in prototype): multi-tenant security, real user management, API feeds, regulator integration, MRL data feeds, external buyer rule packs.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section id="view-login" class="hidden">
+      <div class="split">
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Member Login</div>
+            <span class="tag warn">Prototype</span>
+          </div>
+          <div class="body">
+            <div class="field">
+              <label>Email</label>
+              <input id="loginEmail" class="input" placeholder="e.g. demo@farmx.local" value="demo@farmx.local" />
+            </div>
+            <div class="field">
+              <label>Password</label>
+              <input id="loginPass" class="input" type="password" placeholder="••••••••" value="farmx" />
+            </div>
+            <div class="row">
+              <button class="btn primary" onclick="login()">Login</button>
+              <button class="btn" onclick="logout()">Logout</button>
+            </div>
+            <div style="margin-top:12px" class="note">
+              Roles in this prototype:
+              <div style="margin-top:8px">
+                <span class="tag good">Member (read)</span> can browse registry after login<br/>
+                <span class="tag">Supplier</span> can upload and submit products<br/>
+                <span class="tag">Steward</span> can review & publish submissions
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Access Quick Buttons</div>
+          </div>
+          <div class="body">
+            <div class="note">
+              <div><strong>Member:</strong> demo@farmx.local / farmx</div>
+              <div style="margin-top:6px"><strong>Supplier:</strong> supplier@farmx.local / farmx</div>
+              <div style="margin-top:6px"><strong>Steward:</strong> steward@farmx.local / farmx</div>
+              <div style="margin-top:12px" class="muted">Tip: Use these buttons to set roles instantly.</div>
+            </div>
+            <div class="btnrow">
+              <button class="btn small" onclick="quickRole('member')">Set Member</button>
+              <button class="btn small" onclick="quickRole('supplier')">Set Supplier</button>
+              <button class="btn small" onclick="quickRole('steward')">Set Steward</button>
+              <button class="btn small ghost" onclick="go('#/home')">Back to overview</button>
+            </div>
+            <div class="divider"></div>
+            <div class="note">
+              <strong>Disclaimer:</strong> This registry provides structured information to assist decision-making.
+              Farmers must always follow the product label and applicable buyer/export requirements. FarmX/CropLife provide
+              best-effort guidance and audit tooling; they do not prescribe chemical use.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUPPLIER PORTAL -->
+    <section id="view-supplier" class="hidden">
+      <div class="split">
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Supplier Portal</div>
+            <div>
+              <span id="supplierRoleBadge" class="tag">Role: —</span>
+              <span id="loginBadge1" class="tag warn">Login required</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="note">
+              <strong>Goal:</strong> A supplier registers their organization and uploads products via a standardized spreadsheet.
+              The system validates required fields and routes submissions to the steward review queue.
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="section-title">1) Organization Details</h3>
+            <div class="field">
+              <label>Organization name</label>
+              <input id="orgName" class="input" placeholder="e.g. Example Agrochem Zambia Ltd" />
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Org type</label>
+                <select id="orgType">
+                  <option>Manufacturer</option>
+                  <option>Importer</option>
+                  <option>Distributor</option>
+                  <option>Local agent</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Primary contact email</label>
+                <input id="orgEmail" class="input" placeholder="e.g. regulatory@example.com" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label>Phone</label>
+                <input id="orgPhone" class="input" placeholder="+260 ..." />
+              </div>
+              <div class="field">
+                <label>Physical address</label>
+                <input id="orgAddr" class="input" placeholder="Lusaka, Zambia" />
+              </div>
+            </div>
+
+            <div class="btnrow">
+              <button class="btn primary" onclick="saveOrg()">Save organization</button>
+              <button class="btn" onclick="prefillOrg()">Prefill demo org</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="section-title">2) Upload Products (CSV or XLSX)</h3>
+            <div class="note">
+              Upload the template with one row per <strong>Product × Crop Use</strong> entry.<br/>
+              Minimum required columns: <span class="mono">trade_name, registrant, zambia_reg_no, status, ai_name, ai_conc, formulation, crop, target, rate, phi_days</span>.
+            </div>
+            <div class="field" style="margin-top:12px">
+              <label>Select file</label>
+              <input id="fileInput" class="input" type="file" accept=".csv,.xlsx,.xls" />
+            </div>
+            <div class="btnrow">
+              <button class="btn primary" onclick="parseUpload()">Parse & validate</button>
+              <button class="btn" onclick="downloadTemplate()">Download template</button>
+              <button class="btn ghost" onclick="clearUpload()">Clear</button>
+            </div>
+            <div id="uploadStatus" class="note" style="margin-top:12px">No file parsed yet.</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Upload Preview & Submission</div>
+            <div>
+              <span id="previewBadge" class="tag warn">Nothing to submit</span>
+            </div>
+          </div>
+          <div class="body">
+            <div id="validationSummary" class="note">
+              Parse a spreadsheet to preview records here.
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="overflow:auto; max-height:360px">
+              <table class="table" id="previewTable">
+                <thead>
+                  <tr>
+                    <th>Trade name</th>
+                    <th>AI</th>
+                    <th>Crop</th>
+                    <th>Target</th>
+                    <th>Rate</th>
+                    <th>PHI</th>
+                    <th>Market</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="row">
+              <button class="btn primary" onclick="submitToSteward()">Submit to steward review</button>
+              <button class="btn" onclick="loadDemoUpload()">Load demo upload (no file)</button>
+            </div>
+
+            <div style="margin-top:12px" class="note">
+              <strong>Steward workflow:</strong> submissions enter a queue for review. Once “Published”, records appear in registry browse.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGISTRY -->
+    <section id="view-registry" class="hidden">
+      <div class="panel">
+        <div class="hdr">
+          <div class="h">Registry Browse</div>
+          <div>
+            <span id="loginBadge2" class="tag warn">Login required</span>
+            <span class="tag">Filter + detail</span>
+          </div>
+        </div>
+        <div class="body">
+          <div class="note">
+            Browse published products. Filters demonstrate how farmers and buyers can assess legality, PHI, and market constraints.
+            <br/><span class="muted">Prototype note: “Public browsing” exists as a feature goal; this demo enforces member login.</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row3">
+            <div class="field">
+              <label>Search (trade name / AI / supplier)</label>
+              <input id="fSearch" class="input" placeholder="e.g. glyphosate, maize, supplier name..." oninput="renderRegistry()" />
+            </div>
+            <div class="field">
+              <label>Crop</label>
+              <select id="fCrop" onchange="renderRegistry()">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Market overlay</label>
+              <select id="fMarket" onchange="renderRegistry()">
+                <option value="">None</option>
+                <option value="Tobacco">Tobacco</option>
+                <option value="EU">EU export</option>
+                <option value="Codex">Codex</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row3">
+            <div class="field">
+              <label>Status</label>
+              <select id="fStatus" onchange="renderRegistry()">
+                <option value="">All</option>
+                <option>Active</option>
+                <option>Suspended</option>
+                <option>Withdrawn</option>
+                <option>Expired</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>MoA (IRAC/FRAC/HRAC)</label>
+              <select id="fMoa" onchange="renderRegistry()">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Show only “Allowed” for selected market</label>
+              <select id="fAllowed" onchange="renderRegistry()">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="overflow:auto">
+            <table class="table" id="registryTable">
+              <thead>
+                <tr>
+                  <th>Trade name</th>
+                  <th>Registrant</th>
+                  <th>AI (MoA)</th>
+                  <th>Formulation</th>
+                  <th>Crop use</th>
+                  <th>PHI / REI</th>
+                  <th>Market flags</th>
+                  <th>Detail</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+          <div id="detailBox" class="note">
+            Select “View” to open a product detail card here.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEWARD (CropLife) -->
+    <section id="view-admin" class="hidden">
+      <div class="split">
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Steward Console (CropLife)</div>
+            <div>
+              <span id="stewardRoleBadge" class="tag">Role: —</span>
+              <span id="loginBadge3" class="tag warn">Login required</span>
+            </div>
+          </div>
+          <div class="body">
+            <div class="note">
+              Review supplier submissions, request fixes, and publish approved records to the registry.
+              <br/><span class="muted">In production this would include workflow notes, evidence attachments, and multi-reviewer approvals.</span>
+            </div>
+            <div class="divider"></div>
+
+            <div style="overflow:auto; max-height:430px">
+              <table class="table" id="queueTable">
+                <thead>
+                  <tr>
+                    <th>Submission</th>
+                    <th>Supplier</th>
+                    <th>Records</th>
+                    <th>Issues</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+
+            <div class="divider"></div>
+            <div class="btnrow">
+              <button class="btn" onclick="seedQueueIfEmpty()">Seed review queue</button>
+              <button class="btn ghost" onclick="clearAllData()">Reset prototype data</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="hdr">
+            <div class="h">Governance Notes</div>
+            <span class="tag warn">Draft</span>
+          </div>
+          <div class="body">
+            <div class="note">
+              <strong>Data responsibility:</strong> Supplier owns accuracy of their submissions.<br/>
+              <strong>Steward role:</strong> Validate structure & completeness; publish to the registry.<br/>
+              <strong>Audit:</strong> All changes are timestamped; historical versions retained.<br/>
+              <strong>Disclaimer:</strong> Registry is decision-support; label remains primary authority.
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="section-title">Suggested validation levels</h3>
+            <div class="note">
+              <div><span class="tag good">Level 1</span> Required fields present + schema valid.</div>
+              <div><span class="tag">Level 2</span> Evidence attached (Label + SDS).</div>
+              <div><span class="tag warn">Level 3</span> Market overlays reviewed (tobacco/EU).</div>
+              <div><span class="tag">Level 4</span> Periodic steward audit (quarterly renewal check).</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="section-title">API / HDI expectations (production)</h3>
+            <div class="note">
+              <div>• Versioned endpoints: <span class="mono">/products</span>, <span class="mono">/uses</span>, <span class="mono">/markets</span></div>
+              <div>• Effective dates + change log per record</div>
+              <div>• Role-based access tokens (supplier write, public read, steward review)</div>
+              <div>• Webhooks for downstream updates (FarmX, exporters, analytics)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+        <div class="footer">
+          <div>
+            <strong>FarmX prototype.</strong> Built to demonstrate the supplier → steward → registry workflow for a Zambia CPP database initiative.
+            <span class="muted">This is a static HTML file. No real authentication. No data leaves your computer.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+    <div class="icon" id="toastIcon">✓</div>
+    <div>
+      <p class="t" id="toastTitle">Done</p>
+      <p class="m" id="toastMsg">—</p>
+    </div>
+  </div>
+
+  <!-- Libraries (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+  
+  <!-- FarmX Branding Logo Script -->
+  <script>
+    // Load logo from base64 file or use inline fallback
+    (function() {
+      'use strict';
+      async function loadLogo() {
+        const fxLogo = document.getElementById('fxLogo');
+        if (!fxLogo) return;
+        
+        try {
+          // Try to load from file first
+          const response = await fetch('FarmX_Logo_Base64.txt');
+          if (response.ok) {
+            const base64 = (await response.text()).trim();
+            fxLogo.src = "data:image/jpeg;base64," + base64;
+            return;
+          }
+        } catch (error) {
+          // If fetch fails (e.g., file:// protocol), try to load from FarmX_Logo.jpeg directly
+          console.warn('Could not load logo from base64 file, trying direct image:', error);
+          fxLogo.src = "FarmX_Logo.jpeg";
+        }
+      }
+      
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadLogo);
+      } else {
+        loadLogo();
+      }
+    })();
+  </script>
+
+  <script>
+    /***********************
+     * Prototype state
+     ***********************/
+    const STORAGE = {
+      session: 'farmx_cpp_session',
+      org: 'farmx_cpp_org',
+      draft: 'farmx_cpp_draft_upload',
+      queue: 'farmx_cpp_steward_queue',
+      published: 'farmx_cpp_published',
+    };
+
+    const REQUIRED_COLS = [
+      'trade_name','registrant','zambia_reg_no','status','ai_name','ai_conc','formulation',
+      'moa_code','crop','target','rate','phi_days','rei_hours','market','market_status'
+    ];
+
+    // Seed data (published) — intentionally small for demo
+    const SEED_PUBLISHED = [
+      {
+        id: cryptoRandomId(),
+        trade_name: "ExampleMax 480 SL",
+        registrant: "Example Agrochem Zambia Ltd",
+        zambia_reg_no: "ZM-REG-00123",
+        status: "Active",
+        ai_name: "Glyphosate",
+        ai_conc: "480 g/L",
+        formulation: "SL",
+        moa_code: "HRAC 9",
+        crop: "Maize",
+        target: "Annual broadleaf weeds",
+        rate: "2.0 L/ha",
+        phi_days: "7",
+        rei_hours: "12",
+        market: "EU",
+        market_status: "Allowed",
+        hazards: "Avoid drift; aquatic hazard",
+        mixing: "Do not mix with strong alkaline products",
+        notes: "Prototype record"
+      },
+      {
+        id: cryptoRandomId(),
+        trade_name: "FungiShield 250 SC",
+        registrant: "Zed Inputs (Importer)",
+        zambia_reg_no: "ZM-REG-00456",
+        status: "Active",
+        ai_name: "Azoxystrobin",
+        ai_conc: "250 g/L",
+        formulation: "SC",
+        moa_code: "FRAC 11",
+        crop: "Wheat",
+        target: "Rusts",
+        rate: "0.6 L/ha",
+        phi_days: "35",
+        rei_hours: "24",
+        market: "Codex",
+        market_status: "Allowed",
+        hazards: "Use PPE; avoid waterways",
+        mixing: "Rotate MoA; avoid repeated FRAC 11",
+        notes: "Prototype record"
+      },
+      {
+        id: cryptoRandomId(),
+        trade_name: "TobaccoGuard 200 EC",
+        registrant: "LeafCare Distributors",
+        zambia_reg_no: "ZM-REG-00991",
+        status: "Active",
+        ai_name: "Chlorpyrifos",
+        ai_conc: "200 g/L",
+        formulation: "EC",
+        moa_code: "IRAC 1B",
+        crop: "Tobacco",
+        target: "Soil pests",
+        rate: "1.5 L/ha",
+        phi_days: "60",
+        rei_hours: "48",
+        market: "Tobacco",
+        market_status: "Prohibited",
+        hazards: "High toxicity; strict handling",
+        mixing: "Do not mix with alkaline sprays",
+        notes: "Prototype: shows how market rules can prohibit a product even if registered"
+      }
+    ];
+
+    const CROPS = ["Maize","Wheat","Soybean","Groundnut","Tobacco","Cotton","Vegetables"];
+    const MOA = ["IRAC 1B","IRAC 3A","FRAC 11","FRAC 3","HRAC 9","HRAC 2","—"];
+
+    /***********************
+     * Routing & Nav
+     ***********************/
+    const routes = {
+      "#/home": "view-home",
+      "#/login": "view-login",
+      "#/supplier": "view-supplier",
+      "#/registry": "view-registry",
+      "#/admin": "view-admin",
+    };
+
+    function go(hash){ location.hash = hash; }
+    function setActiveChip(){
+      const chips = document.querySelectorAll('.chip, .fx-chip');
+      chips.forEach(c => c.classList.remove('active'));
+      const current = location.hash || "#/home";
+      const hit = [...chips].find(c => c.dataset.route === current);
+      if(hit) hit.classList.add('active');
+    }
+
+    function showView(){
+      const hash = location.hash || "#/home";
+      setActiveChip();
+
+      Object.values(routes).forEach(id => document.getElementById(id).classList.add('hidden'));
+      const viewId = routes[hash] || "view-home";
+      document.getElementById(viewId).classList.remove('hidden');
+
+      // Access control in prototype (member-only)
+      const sess = getSession();
+      const loggedIn = !!sess?.loggedIn;
+
+      document.getElementById('loginBadge1').textContent = loggedIn ? `Logged in as ${sess.role}` : "Login required";
+      document.getElementById('loginBadge1').className = loggedIn ? "tag good" : "tag warn";
+
+      document.getElementById('loginBadge2').textContent = loggedIn ? `Logged in as ${sess.role}` : "Login required";
+      document.getElementById('loginBadge2').className = loggedIn ? "tag good" : "tag warn";
+
+      document.getElementById('loginBadge3').textContent = loggedIn ? `Logged in as ${sess.role}` : "Login required";
+      document.getElementById('loginBadge3').className = loggedIn ? "tag good" : "tag warn";
+
+      // Route guards (members-only prototype)
+      if((hash === "#/registry" || hash === "#/supplier" || hash === "#/admin") && !loggedIn){
+        toast("Login required", "This prototype enforces member-only access. Please login first.", "warn");
+        location.hash = "#/login";
+        return;
+      }
+
+      // Role badges
+      if(document.getElementById('supplierRoleBadge')){
+        document.getElementById('supplierRoleBadge').textContent = `Role: ${sess?.role || "—"}`;
+      }
+      if(document.getElementById('stewardRoleBadge')){
+        document.getElementById('stewardRoleBadge').textContent = `Role: ${sess?.role || "—"}`;
+      }
+
+      // Page-specific renders
+      if(hash === "#/registry"){
+        initFilters();
+        renderRegistry();
+      }
+      if(hash === "#/admin"){
+        renderQueue();
+      }
+    }
+
+    document.querySelectorAll('.chip, .fx-chip').forEach(el => el.addEventListener('click', () => go(el.dataset.route)));
+    window.addEventListener('hashchange', showView);
+
+    /***********************
+     * Session
+     ***********************/
+    function getSession(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE.session) || "null"); }catch(e){ return null; }
+    }
+    function setSession(sess){ localStorage.setItem(STORAGE.session, JSON.stringify(sess)); }
+    function login(){
+      const email = (document.getElementById('loginEmail').value || "").trim().toLowerCase();
+      const pass = document.getElementById('loginPass').value || "";
+      if(pass !== "farmx"){
+        toast("Login failed", "Prototype password is 'farmx'.", "bad");
+        return;
+      }
+      let role = "member";
+      if(email.includes("supplier")) role = "supplier";
+      if(email.includes("steward")) role = "steward";
+      setSession({ loggedIn:true, email, role, ts: Date.now() });
+      toast("Logged in", `Welcome (${role}).`, "good");
+      // Redirect by role
+      if(role === "supplier") go("#/supplier");
+      else if(role === "steward") go("#/admin");
+      else go("#/registry");
+    }
+    function quickRole(role){
+      const map = {
+        member: "demo@farmx.local",
+        supplier: "supplier@farmx.local",
+        steward: "steward@farmx.local"
+      };
+      document.getElementById('loginEmail').value = map[role];
+      document.getElementById('loginPass').value = "farmx";
+      setSession({ loggedIn:true, email: map[role], role, ts: Date.now() });
+      toast("Role set", `You are now logged in as ${role}.`, "good");
+      if(role === "supplier") go("#/supplier");
+      else if(role === "steward") go("#/admin");
+      else go("#/registry");
+    }
+    function logout(){
+      localStorage.removeItem(STORAGE.session);
+      toast("Logged out", "Session cleared.", "warn");
+      go("#/home");
+    }
+
+    /***********************
+     * Org management
+     ***********************/
+    function saveOrg(){
+      const sess = getSession();
+      if(!sess?.loggedIn){ toast("Login required","Please login first.","warn"); return; }
+      if(sess.role !== "supplier"){
+        toast("Supplier role required", "Switch to supplier demo to submit products.", "warn");
+        return;
+      }
+      const org = {
+        name: document.getElementById('orgName').value.trim(),
+        type: document.getElementById('orgType').value,
+        email: document.getElementById('orgEmail').value.trim(),
+        phone: document.getElementById('orgPhone').value.trim(),
+        address: document.getElementById('orgAddr').value.trim(),
+        updated_at: new Date().toISOString()
+      };
+      if(!org.name || !org.email){
+        toast("Missing fields", "Organization name and contact email are required.", "bad");
+        return;
+      }
+      localStorage.setItem(STORAGE.org, JSON.stringify(org));
+      toast("Organization saved", "Supplier profile stored in prototype.", "good");
+    }
+    function prefillOrg(){
+      document.getElementById('orgName').value = "Example Agrochem Zambia Ltd";
+      document.getElementById('orgType').value = "Distributor";
+      document.getElementById('orgEmail').value = "regulatory@exampleagrochem.co.zm";
+      document.getElementById('orgPhone').value = "+260 97 000 0000";
+      document.getElementById('orgAddr').value = "Lusaka, Zambia";
+      toast("Prefilled", "Demo organization details loaded.", "good");
+    }
+
+    /***********************
+     * Upload parsing (CSV / XLSX)
+     ***********************/
+    function clearUpload(){
+      localStorage.removeItem(STORAGE.draft);
+      document.getElementById('fileInput').value = "";
+      document.getElementById('uploadStatus').textContent = "No file parsed yet.";
+      document.getElementById('validationSummary').innerHTML = "Parse a spreadsheet to preview records here.";
+      document.querySelector('#previewTable tbody').innerHTML = "";
+      document.getElementById('previewBadge').textContent = "Nothing to submit";
+      document.getElementById('previewBadge').className = "tag warn";
+      toast("Cleared", "Upload draft cleared.", "warn");
+    }
+
+    function parseUpload(){
+      const sess = getSession();
+      if(!sess?.loggedIn){ toast("Login required","Please login first.","warn"); return; }
+      if(sess.role !== "supplier"){ toast("Supplier role required","Switch to supplier demo to upload.","warn"); return; }
+
+      const file = document.getElementById('fileInput').files?.[0];
+      if(!file){
+        toast("No file selected", "Choose a CSV or XLSX file first.", "warn");
+        return;
+      }
+
+      document.getElementById('uploadStatus').textContent = `Reading: ${file.name} (${Math.round(file.size/1024)} KB)`;
+
+      const ext = (file.name.split('.').pop() || "").toLowerCase();
+      if(ext === "csv"){
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (res) => handleParsedRows(res.data, file.name),
+          error: () => toast("Parse error", "Unable to parse CSV.", "bad")
+        });
+      } else if(ext === "xlsx" || ext === "xls"){
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: "array" });
+          const wsName = wb.SheetNames[0];
+          const ws = wb.Sheets[wsName];
+          const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
+          handleParsedRows(json, file.name);
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        toast("Unsupported file", "Please upload CSV or XLSX.", "bad");
+      }
+    }
+
+    function handleParsedRows(rows, filename){
+      // normalize keys -> snake_case-ish, lower
+      const norm = rows.map(r => {
+        const out = {};
+        Object.keys(r || {}).forEach(k => {
+          const key = String(k).trim().toLowerCase().replace(/\s+/g,'_');
+          out[key] = (r[k] ?? "").toString().trim();
+        });
+        // ensure expected keys exist (even if blank)
+        REQUIRED_COLS.forEach(c => { if(out[c] === undefined) out[c] = ""; });
+        out._id = cryptoRandomId();
+        out._source = filename;
+        return out;
+      });
+
+      const issues = [];
+      // Validate required columns exist in header
+      const sample = norm[0] || {};
+      const missingCols = REQUIRED_COLS.filter(c => !(c in sample));
+      if(missingCols.length){
+        issues.push(`Missing required columns: ${missingCols.join(', ')}`);
+      }
+
+      // Validate required values per row
+      let badRows = 0;
+      const rowIssues = [];
+      norm.forEach((r, idx) => {
+        const miss = [];
+        ['trade_name','registrant','zambia_reg_no','status','ai_name','ai_conc','formulation','crop','target','rate','phi_days'].forEach(k => {
+          if(!r[k]) miss.push(k);
+        });
+        if(miss.length){
+          badRows++;
+          if(rowIssues.length < 6) rowIssues.push(`Row ${idx+2}: missing ${miss.join(', ')}`); // +2 to account header row in spreadsheets
+        }
+        if(r.market && !r.market_status){
+          badRows++;
+          if(rowIssues.length < 6) rowIssues.push(`Row ${idx+2}: market specified but market_status blank`);
+        }
+      });
+
+      const okRows = norm.length - badRows;
+      const summary = {
+        filename,
+        total: norm.length,
+        okRows: Math.max(0, okRows),
+        badRows,
+        issues: [...issues, ...rowIssues],
+        parsedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem(STORAGE.draft, JSON.stringify({ summary, rows: norm }));
+      document.getElementById('uploadStatus').textContent = `Parsed ${summary.total} rows from ${filename}.`;
+      renderPreview();
+      toast("Parsed upload", `${summary.total} rows loaded.`, badRows ? "warn" : "good");
+    }
+
+    function renderPreview(){
+      const draft = getDraft();
+      const tbody = document.querySelector('#previewTable tbody');
+      tbody.innerHTML = "";
+      if(!draft){
+        document.getElementById('validationSummary').innerHTML = "Parse a spreadsheet to preview records here.";
+        return;
+      }
+      const { summary, rows } = draft;
+      const issuesHtml = summary.issues.length
+        ? `<div style="margin-top:8px"><span class="tag bad">Issues</span> ${summary.issues.map(x=>`<div class="mono" style="margin-top:4px">• ${escapeHtml(x)}</div>`).join('')}</div>`
+        : `<div style="margin-top:8px"><span class="tag good">No validation issues found</span></div>`;
+
+      document.getElementById('validationSummary').innerHTML = `
+        <div><strong>File:</strong> <span class="mono">${escapeHtml(summary.filename)}</span></div>
+        <div style="margin-top:6px"><strong>Rows:</strong> ${summary.total} • <span class="mono">${summary.okRows}</span> OK • <span class="mono">${summary.badRows}</span> with issues</div>
+        <div style="margin-top:6px" class="muted">Parsed at ${new Date(summary.parsedAt).toLocaleString()}</div>
+        ${issuesHtml}
+      `;
+
+      rows.slice(0, 40).forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(r.trade_name || "—")}</td>
+          <td>${escapeHtml((r.ai_name||"—") + (r.moa_code ? ` (${r.moa_code})` : ""))}</td>
+          <td>${escapeHtml(r.crop || "—")}</td>
+          <td>${escapeHtml(r.target || "—")}</td>
+          <td>${escapeHtml(r.rate || "—")}</td>
+          <td>${escapeHtml(r.phi_days ? `${r.phi_days} d` : "—")}</td>
+          <td>${escapeHtml(r.market ? `${r.market}: ${r.market_status||"—"}` : "—")}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const badge = document.getElementById('previewBadge');
+      if(summary.total > 0){
+        badge.textContent = summary.badRows ? "Submission allowed (with issues flagged)" : "Ready to submit";
+        badge.className = summary.badRows ? "tag warn" : "tag good";
+      } else {
+        badge.textContent = "Nothing to submit";
+        badge.className = "tag warn";
+      }
+    }
+
+    function getDraft(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE.draft) || "null"); }catch(e){ return null; }
+    }
+
+    function loadDemoUpload(){
+      // Create a demo draft without file upload
+      const demo = [
+        {
+          trade_name:"DemoFung 500 WG", registrant:"Example Agrochem Zambia Ltd", zambia_reg_no:"ZM-REG-77777", status:"Active",
+          ai_name:"Mancozeb", ai_conc:"500 g/kg", formulation:"WG", moa_code:"FRAC M03",
+          crop:"Maize", target:"Leaf blight", rate:"1.5 kg/ha", phi_days:"14", rei_hours:"24",
+          market:"EU", market_status:"Restricted",
+        },
+        {
+          trade_name:"DemoWeed 360 SL", registrant:"Example Agrochem Zambia Ltd", zambia_reg_no:"ZM-REG-88888", status:"Active",
+          ai_name:"Glyphosate", ai_conc:"360 g/L", formulation:"SL", moa_code:"HRAC 9",
+          crop:"Soybean", target:"Pre-plant burndown", rate:"3.0 L/ha", phi_days:"7", rei_hours:"12",
+          market:"Tobacco", market_status:"Prohibited",
+        }
+      ].map(x => ({...x, _id: cryptoRandomId(), _source:"DEMO"}));
+
+      const summary = { filename:"DEMO", total: demo.length, okRows: demo.length, badRows: 0, issues: [], parsedAt: new Date().toISOString() };
+      localStorage.setItem(STORAGE.draft, JSON.stringify({ summary, rows: demo }));
+      renderPreview();
+      toast("Demo loaded", "Loaded 2 demo rows.", "good");
+    }
+
+    /***********************
+     * Steward queue + publish
+     ***********************/
+    function getQueue(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE.queue) || "[]"); }catch(e){ return []; }
+    }
+    function setQueue(q){ localStorage.setItem(STORAGE.queue, JSON.stringify(q)); }
+
+    function submitToSteward(){
+      const sess = getSession();
+      if(!sess?.loggedIn){ toast("Login required","Please login first.","warn"); return; }
+      if(sess.role !== "supplier"){ toast("Supplier role required","Switch to supplier demo to submit.","warn"); return; }
+
+      const org = readOrg();
+      if(!org?.name){ toast("Missing organization","Save your organization details first.","warn"); return; }
+
+      const draft = getDraft();
+      if(!draft?.rows?.length){ toast("Nothing to submit","Parse an upload first.","warn"); return; }
+
+      const queue = getQueue();
+      const submission = {
+        id: cryptoRandomId(),
+        supplier: org.name,
+        supplier_email: org.email,
+        submitted_at: new Date().toISOString(),
+        status: "Pending",
+        summary: draft.summary,
+        rows: draft.rows,
+        steward_notes: "",
+      };
+      queue.unshift(submission);
+      setQueue(queue);
+      toast("Submitted", "Submission added to steward review queue.", "good");
+      go("#/admin");
+    }
+
+    function readOrg(){
+      try{ return JSON.parse(localStorage.getItem(STORAGE.org) || "null"); }catch(e){ return null; }
+    }
+
+    function renderQueue(){
+      const sess = getSession();
+      if(!sess?.loggedIn){ return; }
+      if(sess.role !== "steward"){
+        // Still show queue but warn
+        toast("Steward role recommended", "Switch to steward demo to publish submissions.", "warn");
+      }
+
+      const tbody = document.querySelector('#queueTable tbody');
+      tbody.innerHTML = "";
+      const queue = getQueue();
+      if(queue.length === 0){
+        tbody.innerHTML = `<tr><td colspan="6" class="muted">No submissions yet. Ask a supplier to submit, or seed the queue.</td></tr>`;
+        return;
+      }
+
+      queue.forEach(sub => {
+        const issues = (sub.summary?.issues || []).length;
+        const tag = issues ? `<span class="tag warn">${issues} issues</span>` : `<span class="tag good">No issues</span>`;
+        const statusTag = statusPill(sub.status);
+        const canPublish = (sess.role === "steward") && (sub.status !== "Published");
+        const action = canPublish
+          ? `<button class="btn small primary" onclick="publishSubmission('${sub.id}')">Publish</button>
+             <button class="btn small" onclick="requestFix('${sub.id}')">Request fix</button>`
+          : `<button class="btn small" onclick="viewSubmission('${sub.id}')">View</button>`;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="mono">${escapeHtml(sub.id.slice(0,8))}</td>
+          <td>${escapeHtml(sub.supplier || "—")}</td>
+          <td>${escapeHtml(String(sub.summary?.total || 0))}</td>
+          <td>${tag}</td>
+          <td>${statusTag}</td>
+          <td>${action}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewSubmission(id){
+      const sub = getQueue().find(x=>x.id===id);
+      if(!sub){ toast("Not found","Submission not found.","bad"); return; }
+      toast("Submission", `Supplier: ${sub.supplier} • Records: ${sub.summary?.total||0}`, "good");
+    }
+
+    function requestFix(id){
+      const sess = getSession();
+      if(sess.role !== "steward"){ toast("Steward role required","Switch to steward demo to manage submissions.","warn"); return; }
+      const queue = getQueue();
+      const idx = queue.findIndex(x=>x.id===id);
+      if(idx<0) return;
+      queue[idx].status = "Fix requested";
+      setQueue(queue);
+      toast("Fix requested", "Submission marked as Fix requested.", "warn");
+      renderQueue();
+    }
+
+    function publishSubmission(id){
+      const sess = getSession();
+      if(sess.role !== "steward"){ toast("Steward role required","Switch to steward demo to publish.","warn"); return; }
+
+      const queue = getQueue();
+      const idx = queue.findIndex(x=>x.id===id);
+      if(idx<0){ toast("Not found","Submission not found.","bad"); return; }
+      const sub = queue[idx];
+
+      // Merge into published store
+      const published = getPublished();
+      const stamped = sub.rows.map(r => ({
+        ...r,
+        id: r.id || cryptoRandomId(),
+        published_from_submission: sub.id,
+        supplier: sub.supplier,
+        published_at: new Date().toISOString(),
+        status: r.status || "Active"
+      }));
+
+      // Simple dedupe by (trade_name + crop + ai_name + registrant)
+      const key = (x) => `${(x.trade_name||"").toLowerCase()}|${(x.crop||"").toLowerCase()}|${(x.ai_name||"").toLowerCase()}|${(x.registrant||"").toLowerCase()}`;
+      const existing = new Set(published.map(key));
+      const merged = [...published];
+      stamped.forEach(x => { if(!existing.has(key(x))) merged.push(x); });
+
+      setPublished(merged);
+
+      // Mark queue item published
+      queue[idx].status = "Published";
+      setQueue(queue);
+      toast("Published", `Added ${stamped.length} records to the registry.`, "good");
+      renderQueue();
+    }
+
+    function seedQueueIfEmpty(){
+      const q = getQueue();
+      if(q.length){ toast("Queue exists","Submissions already in queue.","warn"); return; }
+      // create a seed submission from the seed data, as if supplier submitted
+      const sub = {
+        id: cryptoRandomId(),
+        supplier: "Example Agrochem Zambia Ltd",
+        supplier_email: "regulatory@exampleagrochem.co.zm",
+        submitted_at: new Date().toISOString(),
+        status: "Pending",
+        summary: { filename:"SEED", total: 3, okRows: 3, badRows: 0, issues: [], parsedAt: new Date().toISOString() },
+        rows: SEED_PUBLISHED.map(x => ({
+          trade_name:x.trade_name, registrant:x.registrant, zambia_reg_no:x.zambia_reg_no, status:x.status,
+          ai_name:x.ai_name, ai_conc:x.ai_conc, formulation:x.formulation, moa_code:x.moa_code,
+          crop:x.crop, target:x.target, rate:x.rate, phi_days:x.phi_days, rei_hours:x.rei_hours,
+          market:x.market, market_status:x.market_status
+        })),
+        steward_notes:"Seeded for demo"
+      };
+      setQueue([sub]);
+      toast("Seeded queue","One pending submission added.","good");
+      renderQueue();
+    }
+
+    /***********************
+     * Registry browse
+     ***********************/
+    function getPublished(){
+      try{
+        const raw = localStorage.getItem(STORAGE.published);
+        if(raw) return JSON.parse(raw);
+      }catch(e){}
+      // If nothing, seed minimal published data (so browse isn't empty)
+      return [...SEED_PUBLISHED];
+    }
+    function setPublished(data){
+      localStorage.setItem(STORAGE.published, JSON.stringify(data));
+    }
+
+    function initFilters(){
+      // crop filter
+      const cropSel = document.getElementById('fCrop');
+      cropSel.innerHTML = `<option value="">All</option>`;
+      const crops = unique(getPublished().map(x=>x.crop).filter(Boolean)).sort((a,b)=>a.localeCompare(b));
+      crops.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        cropSel.appendChild(opt);
+      });
+
+      // moa filter
+      const moaSel = document.getElementById('fMoa');
+      moaSel.innerHTML = `<option value="">All</option>`;
+      const moas = unique(getPublished().map(x=>x.moa_code).filter(Boolean)).sort((a,b)=>a.localeCompare(b));
+      moas.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m; opt.textContent = m;
+        moaSel.appendChild(opt);
+      });
+    }
+
+    function renderRegistry(){
+      const data = getPublished();
+
+      const s = (document.getElementById('fSearch')?.value || "").trim().toLowerCase();
+      const crop = document.getElementById('fCrop')?.value || "";
+      const market = document.getElementById('fMarket')?.value || "";
+      const status = document.getElementById('fStatus')?.value || "";
+      const moa = document.getElementById('fMoa')?.value || "";
+      const allowedOnly = (document.getElementById('fAllowed')?.value || "no") === "yes";
+
+      let rows = data.filter(x => {
+        if(crop && x.crop !== crop) return false;
+        if(status && x.status !== status) return false;
+        if(moa && x.moa_code !== moa) return false;
+
+        if(market){
+          // If market filter selected, keep records for that market OR those with no market overlay?
+          // For prototype, show those matching market and also show any record with no market specified as "Unknown"
+          const matches = (x.market || "") === market;
+          const unknown = !x.market;
+          if(!(matches || unknown)) return false;
+
+          if(allowedOnly){
+            if(unknown) return false;
+            if((x.market_status || "").toLowerCase() !== "allowed") return false;
+          }
+        }
+
+        if(s){
+          const hay = `${x.trade_name||""} ${x.ai_name||""} ${x.registrant||""} ${x.crop||""} ${x.target||""} ${x.zambia_reg_no||""}`.toLowerCase();
+          if(!hay.includes(s)) return false;
+        }
+        return true;
+      });
+
+      // render
+      const tbody = document.querySelector('#registryTable tbody');
+      tbody.innerHTML = "";
+      if(rows.length === 0){
+        tbody.innerHTML = `<tr><td colspan="8" class="muted">No products match your filters.</td></tr>`;
+        return;
+      }
+
+      // sort by trade name
+      rows.sort((a,b)=>(a.trade_name||"").localeCompare(b.trade_name||""));
+
+      rows.slice(0, 250).forEach(x => {
+        const marketFlags = marketFlagTags(x, market);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(x.trade_name||"—")}</strong><div class="muted mono" style="margin-top:4px">${escapeHtml(x.zambia_reg_no||"")}</div></td>
+          <td>${escapeHtml(x.registrant||"—")}</td>
+          <td>${escapeHtml(x.ai_name||"—")}<div class="muted" style="margin-top:4px">${escapeHtml(x.moa_code||"")}</div></td>
+          <td>${escapeHtml(x.formulation||"—")}<div class="muted" style="margin-top:4px">${escapeHtml(x.ai_conc||"")}</div></td>
+          <td><span class="tag">${escapeHtml(x.crop||"—")}</span><div class="muted" style="margin-top:4px">${escapeHtml(x.target||"")}</div></td>
+          <td><span class="tag">${escapeHtml(x.phi_days ? x.phi_days + " d" : "—")}</span> <span class="tag">${escapeHtml(x.rei_hours ? x.rei_hours + " h" : "—")}</span></td>
+          <td>${marketFlags}</td>
+          <td><button class="btn small" onclick="showDetail('${escapeAttr(x.id || x._id || cryptoRandomId())}')">View</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function showDetail(id){
+      const data = getPublished();
+      const x = data.find(r => (r.id||r._id) === id) || data.find(r => (r.id||r._id) === id);
+      if(!x){ toast("Not found","Product not found.","bad"); return; }
+      const box = document.getElementById('detailBox');
+
+      const marketBlock = x.market
+        ? `<div style="margin-top:8px">${marketFlagTags(x, x.market)}</div>`
+        : `<div class="muted" style="margin-top:8px">No market overlay provided for this record.</div>`;
+
+      box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap">
+          <div>
+            <div class="kicker"><span class="dot"></span> Product detail</div>
+            <div style="font-size:20px; font-weight:750; margin-top:6px">${escapeHtml(x.trade_name||"—")}</div>
+            <div class="muted" style="margin-top:6px">${escapeHtml(x.registrant||"—")} • <span class="mono">${escapeHtml(x.zambia_reg_no||"")}</span> • ${escapeHtml(x.status||"")}</div>
+          </div>
+          <div>
+            <span class="tag">${escapeHtml(x.crop||"—")}</span>
+            <span class="tag">${escapeHtml(x.formulation||"—")}</span>
+            <span class="tag">${escapeHtml(x.ai_name||"—")}</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row3">
+          <div>
+            <div class="muted">Active ingredient</div>
+            <div style="margin-top:4px"><strong>${escapeHtml(x.ai_name||"—")}</strong> <span class="muted">(${escapeHtml(x.ai_conc||"")})</span></div>
+            <div class="muted" style="margin-top:4px">${escapeHtml(x.moa_code||"")}</div>
+          </div>
+          <div>
+            <div class="muted">Use</div>
+            <div style="margin-top:4px"><strong>${escapeHtml(x.target||"—")}</strong></div>
+            <div class="muted" style="margin-top:4px">${escapeHtml(x.rate||"—")}</div>
+          </div>
+          <div>
+            <div class="muted">Intervals</div>
+            <div style="margin-top:4px"><strong>PHI:</strong> ${escapeHtml(x.phi_days ? x.phi_days + " days" : "—")}</div>
+            <div class="muted" style="margin-top:4px"><strong>REI:</strong> ${escapeHtml(x.rei_hours ? x.rei_hours + " hours" : "—")}</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <div>
+            <div class="muted">Mixing / compatibility (prototype field)</div>
+            <div style="margin-top:6px">${escapeHtml(x.mixing || "Not provided")}</div>
+          </div>
+          <div>
+            <div class="muted">Hazards / stewardship (prototype field)</div>
+            <div style="margin-top:6px">${escapeHtml(x.hazards || "Not provided")}</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="muted">Market overlay</div>
+        ${marketBlock}
+
+        <div class="divider"></div>
+
+        <div class="note">
+          <strong>Evidence links:</strong> In production, this record would store label + SDS attachments and versioned regulatory documentation.
+        </div>
+      `;
+      toast("Opened detail", x.trade_name || "Product", "good");
+    }
+
+    function marketFlagTags(x, selectedMarket){
+      const m = x.market || "";
+      const s = (x.market_status || "").toLowerCase();
+      if(!m){
+        return `<span class="tag warn">Market: Unknown</span>`;
+      }
+      if(selectedMarket && m !== selectedMarket){
+        return `<span class="tag warn">Market: ${escapeHtml(m)}</span> <span class="tag warn">Status: ${escapeHtml(x.market_status||"Unknown")}</span>`;
+      }
+      if(s === "allowed"){
+        return `<span class="tag good">${escapeHtml(m)}</span> <span class="tag good">Allowed</span>`;
+      }
+      if(s === "restricted"){
+        return `<span class="tag warn">${escapeHtml(m)}</span> <span class="tag warn">Restricted</span>`;
+      }
+      if(s === "prohibited"){
+        return `<span class="tag bad">${escapeHtml(m)}</span> <span class="tag bad">Prohibited</span>`;
+      }
+      return `<span class="tag">${escapeHtml(m)}</span> <span class="tag warn">${escapeHtml(x.market_status||"Unknown")}</span>`;
+    }
+
+    /***********************
+     * Template download
+     ***********************/
+    function downloadTemplate(){
+      const headers = REQUIRED_COLS.join(',');
+      const sample = [
+        {
+          trade_name:"YourProduct 250 SC",
+          registrant:"Your Company Zambia Ltd",
+          zambia_reg_no:"ZM-REG-XXXXX",
+          status:"Active",
+          ai_name:"Azoxystrobin",
+          ai_conc:"250 g/L",
+          formulation:"SC",
+          moa_code:"FRAC 11",
+          crop:"Maize",
+          target:"Leaf spot",
+          rate:"0.6 L/ha",
+          phi_days:"35",
+          rei_hours:"24",
+          market:"Tobacco",
+          market_status:"Prohibited"
+        },
+        {
+          trade_name:"YourProduct 250 SC",
+          registrant:"Your Company Zambia Ltd",
+          zambia_reg_no:"ZM-REG-XXXXX",
+          status:"Active",
+          ai_name:"Azoxystrobin",
+          ai_conc:"250 g/L",
+          formulation:"SC",
+          moa_code:"FRAC 11",
+          crop:"Wheat",
+          target:"Rust",
+          rate:"0.6 L/ha",
+          phi_days:"35",
+          rei_hours:"24",
+          market:"EU",
+          market_status:"Allowed"
+        }
+      ];
+      const rows = sample.map(r => REQUIRED_COLS.map(h => csvEscape(r[h] ?? "")).join(','));
+      const csv = [headers, ...rows].join('\n');
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "FarmX_CPP_Upload_Template_v0.1.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast("Downloaded", "Template CSV downloaded.", "good");
+    }
+
+    function csvEscape(v){
+      const s = String(v);
+      if(/[,"\n]/.test(s)) return `"${s.replaceAll('"','""')}"`;
+      return s;
+    }
+
+    /***********************
+     * Utilities
+     ***********************/
+    function toast(title, msg, kind="good"){
+      const el = document.getElementById('toast');
+      el.className = `toast show ${kind}`;
+      document.getElementById('toastTitle').textContent = title;
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastIcon').textContent = kind === "bad" ? "!" : (kind === "warn" ? "•" : "✓");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    function unique(arr){
+      return [...new Set(arr)];
+    }
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function escapeAttr(str){ return escapeHtml(str).replaceAll('"','&quot;'); }
+
+    function statusPill(status){
+      const s = (status||"").toLowerCase();
+      if(s.includes("published")) return `<span class="tag good">Published</span>`;
+      if(s.includes("pending")) return `<span class="tag warn">Pending</span>`;
+      if(s.includes("fix")) return `<span class="tag bad">Fix requested</span>`;
+      return `<span class="tag">${escapeHtml(status||"—")}</span>`;
+    }
+
+    function cryptoRandomId(){
+      // deterministic enough for prototype
+      if(window.crypto && crypto.getRandomValues){
+        const b = new Uint8Array(12);
+        crypto.getRandomValues(b);
+        return [...b].map(x => x.toString(16).padStart(2,'0')).join('');
+      }
+      return Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function clearAllData(){
+      if(!confirm("Reset prototype data? This clears session, org, drafts, queue, and published data.")) return;
+      Object.values(STORAGE).forEach(k => localStorage.removeItem(k));
+      toast("Reset", "Prototype data cleared.", "warn");
+      go("#/home");
+      setTimeout(() => location.reload(), 300);
+    }
+
+    // Seed published data on first load if not present
+    (function bootstrap(){
+      if(!localStorage.getItem(STORAGE.published)){
+        setPublished(SEED_PUBLISHED);
+      }
+      // Ensure route is set
+      if(!location.hash) location.hash = "#/home";
+      showView();
+    })();
+  </script>
+</body>
+</html>
